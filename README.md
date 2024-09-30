@@ -1,2 +1,3 @@
 # securae-cli
-Securae Command Line Interface
+
+Securae Backup Command Line Interface
