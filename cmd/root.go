@@ -13,9 +13,9 @@ import (
 )
 
 const version = "0.1.0"
-const apiEndpoint = "http://localhost:8000/api/v1"
 
 var cfgFile string
+var apiEndpoint = "http://localhost:8000/api/v1"
 
 var rootCmd = &cobra.Command{
 	Use:     "securae",

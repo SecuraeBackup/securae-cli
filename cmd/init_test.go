@@ -5,11 +5,21 @@ package cmd
 
 import (
 	"bytes"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 )
 
 func TestInitCmdCreateConfigFile(t *testing.T) {
+	// Mock HTTP server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+	apiEndpoint = server.URL
+
 	// Set path for a temporary config file
 	tmpDir := t.TempDir()
 	configFile := tmpDir + "/config.yaml"
@@ -38,6 +48,14 @@ func TestInitCmdCreateConfigFile(t *testing.T) {
 }
 
 func TestInitCmdDontOverrideConfigFile(t *testing.T) {
+	// Mock HTTP server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+	apiEndpoint = server.URL
+
 	// Create a temporary and empty config file
 	tmpDir := t.TempDir()
 	f, err := os.CreateTemp(tmpDir, "config*.yaml")
