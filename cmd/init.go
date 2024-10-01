@@ -4,10 +4,8 @@ Copyright © 2024 Securae Backup
 package cmd
 
 import (
-	"bufio"
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,8 +16,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 )
-
-const apiEndpoint = "http://localhost:8000/api/v1"
 
 type AppConfiguration struct {
 	ApiToken                string `yaml:"api-token"`
@@ -47,25 +43,15 @@ var initCmd = &cobra.Command{
 			log.Fatal(err)
 		} else {
 			defer resp.Body.Close()
-			log.Println("Response status:", resp.Status)
-
-			scanner := bufio.NewScanner(resp.Body)
-			for i := 0; scanner.Scan() && i < 5; i++ {
-				log.Println(scanner.Text())
-			}
-
-			if err := scanner.Err(); err != nil {
-				panic(err)
-			}
 
 			if resp.StatusCode != 200 {
 				if resp.StatusCode == 401 {
-					fmt.Println("Error: You're using an invalid API token.")
+					cmd.Println("Error: This API token seems to be wrong.")
 				} else {
-					fmt.Println("Error: The API service is unavaliable or its URL has changed.")
+					cmd.Println("Error: The API service is unavaliable or its URL has changed.")
 				}
 			} else {
-				fmt.Println("Write token to file")
+				cmd.Println("Write token to file")
 				config := AppConfiguration{
 					ApiToken:                viper.GetViper().GetString("api-token"),
 					EncryptionKeyB64encoded: "",
@@ -75,8 +61,7 @@ var initCmd = &cobra.Command{
 					panic(err)
 				}
 
-				configFileName := "/home/pabluk/.config/securae.yaml"
-				err = ioutil.WriteFile(configFileName, yamlFile, 0600)
+				err = ioutil.WriteFile(cfgFile, yamlFile, 0600)
 				if err != nil {
 					panic(err)
 				}
@@ -88,7 +73,7 @@ var initCmd = &cobra.Command{
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println("Write encryption key to file")
+			cmd.Println("Write encryption key to file")
 			config := AppConfiguration{
 				ApiToken:                viper.GetViper().GetString("api-token"),
 				EncryptionKeyB64encoded: base64.StdEncoding.EncodeToString(key),
@@ -98,16 +83,15 @@ var initCmd = &cobra.Command{
 				panic(err)
 			}
 
-			configFileName := "/home/pabluk/.config/securae.yaml"
-			err = ioutil.WriteFile(configFileName, yamlFile, 0600)
+			err = ioutil.WriteFile(cfgFile, yamlFile, 0600)
 			if err != nil {
 				panic(err)
 			}
 
-			fmt.Println("A new encryption key was generated.\n")
-			fmt.Println("WARNING: please save this encryption key in a safe place:")
-			fmt.Println("\n" + config.EncryptionKeyB64encoded + "\n")
-			fmt.Println("You will need it to recover your files in case of disaster.")
+			cmd.Println("A new encryption key was generated.")
+			cmd.Println("\nWARNING: please save this encryption key in a safe place:")
+			cmd.Println("\n" + config.EncryptionKeyB64encoded + "\n")
+			cmd.Println("You will need it to recover your files in case of disaster.")
 		}
 
 	},

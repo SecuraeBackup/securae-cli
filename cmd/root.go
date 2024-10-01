@@ -12,7 +12,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-var version = "0.1.0"
+const version = "0.1.0"
+const apiEndpoint = "http://localhost:8000/api/v1"
+
 var cfgFile string
 
 var rootCmd = &cobra.Command{
