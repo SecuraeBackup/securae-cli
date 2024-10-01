@@ -11,12 +11,17 @@ import (
 	"testing"
 )
 
-func TestInitCmdCreateConfigFile(t *testing.T) {
-	// Mock HTTP server
+// Mock API Server
+func mockAPIServer() *httptest.Server {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{}`))
 	}))
+	return server
+}
+
+func TestInitCmdCreateConfigFile(t *testing.T) {
+	server := mockAPIServer()
 	defer server.Close()
 	apiEndpoint = server.URL
 
@@ -48,11 +53,7 @@ func TestInitCmdCreateConfigFile(t *testing.T) {
 }
 
 func TestInitCmdDontOverrideConfigFile(t *testing.T) {
-	// Mock HTTP server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{}`))
-	}))
+	server := mockAPIServer()
 	defer server.Close()
 	apiEndpoint = server.URL
 
