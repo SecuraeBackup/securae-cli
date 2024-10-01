@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -61,9 +62,12 @@ var initCmd = &cobra.Command{
 					panic(err)
 				}
 
-				err = ioutil.WriteFile(cfgFile, yamlFile, 0600)
+				_, err = os.Stat(cfgFile)
 				if err != nil {
-					panic(err)
+					err = ioutil.WriteFile(cfgFile, yamlFile, 0600)
+					if err != nil {
+						panic(err)
+					}
 				}
 
 			}
@@ -83,9 +87,12 @@ var initCmd = &cobra.Command{
 				panic(err)
 			}
 
-			err = ioutil.WriteFile(cfgFile, yamlFile, 0600)
+			_, err = os.Stat(cfgFile)
 			if err != nil {
-				panic(err)
+				err = ioutil.WriteFile(cfgFile, yamlFile, 0600)
+				if err != nil {
+					panic(err)
+				}
 			}
 
 			cmd.Println("A new encryption key was generated.")
