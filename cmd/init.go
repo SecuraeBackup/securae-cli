@@ -52,7 +52,6 @@ var initCmd = &cobra.Command{
 					cmd.Println("Error: The API service is unavaliable or its URL has changed.")
 				}
 			} else {
-				cmd.Println("Write token to file")
 				config := AppConfiguration{
 					ApiToken:                viper.GetViper().GetString("api-token"),
 					EncryptionKeyB64encoded: "",
@@ -77,7 +76,6 @@ var initCmd = &cobra.Command{
 			if err != nil {
 				panic(err)
 			}
-			cmd.Println("Write encryption key to file")
 			config := AppConfiguration{
 				ApiToken:                viper.GetViper().GetString("api-token"),
 				EncryptionKeyB64encoded: base64.StdEncoding.EncodeToString(key),
@@ -95,10 +93,9 @@ var initCmd = &cobra.Command{
 				}
 			}
 
-			cmd.Println("A new encryption key was generated.")
-			cmd.Println("\nWARNING: please save this encryption key in a safe place:")
+			cmd.Println("A new encryption key was generated:")
 			cmd.Println("\n" + config.EncryptionKeyB64encoded + "\n")
-			cmd.Println("You will need it to recover your files in case of disaster.")
+			cmd.Println("WARNING: Please save this encryption key in a safe place. You will need it to test your backups or to recover your files in case of disaster.")
 		}
 
 	},

@@ -4,8 +4,8 @@ Copyright © 2024 Securae Backup
 package cmd
 
 import (
-	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -36,6 +36,8 @@ func init() {
 }
 
 func initConfig() {
+	var configFilename = "securae.yaml"
+
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
@@ -44,14 +46,11 @@ func initConfig() {
 
 		viper.AddConfigPath(configDir)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName("securae.yaml")
+		viper.SetConfigName(configFilename)
+		cfgFile = path.Join(configDir, configFilename)
 	}
 
 	viper.SetEnvPrefix("securae")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(`-`, `_`))
 	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	}
 }
