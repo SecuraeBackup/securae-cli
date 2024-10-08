@@ -26,6 +26,7 @@ type AppConfiguration struct {
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize Securae's configuration",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		client := &http.Client{
