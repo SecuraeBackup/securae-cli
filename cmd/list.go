@@ -38,9 +38,9 @@ Or you can also use an environment variable:
 			fmt.Errorf("A Backup ID must be specified.")
 		}
 		url := fmt.Sprintf("%s/backup_objects", api)
-		files, err := fetchFiles(url, token, []byte(fmt.Sprintf(`{"filename": "%s"}`)))
+		files, err := fetchFiles(url, token, []byte(`[]`))
 		if err != nil {
-			fmt.Println("%s", err)
+			fmt.Println(err)
 		}
 		for _, f := range files {
 			cmd.Println(f)
