@@ -15,7 +15,7 @@ import (
 )
 
 var initCmd = &cobra.Command{
-	Use:   "init",
+	Use:   "init [flags]",
 	Short: "Initialize Securae's configuration",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
