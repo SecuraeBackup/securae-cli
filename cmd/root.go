@@ -4,6 +4,7 @@ Copyright © 2024 Securae Backup
 package cmd
 
 import (
+	"log"
 	"os"
 	"path"
 	"strings"
@@ -15,6 +16,7 @@ import (
 const version = "0.1.0"
 
 var cfgFile string
+
 var apiEndpoint = "http://localhost:8000/api/v1"
 
 var rootCmd = &cobra.Command{
@@ -53,4 +55,8 @@ func initConfig() {
 	viper.SetEnvPrefix("securae")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(`-`, `_`))
 	viper.AutomaticEnv()
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
