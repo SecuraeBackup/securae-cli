@@ -4,6 +4,7 @@ Copyright © 2024 Securae Backup
 package cmd
 
 import (
+	"io/fs"
 	"log"
 	"os"
 	"path"
@@ -40,6 +41,8 @@ func init() {
 func initConfig() {
 	var configFilename = "securae.yaml"
 
+	viper.SetDefault("api.url", "https://dashboard.securaebackup.com/api/v1")
+
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
@@ -50,13 +53,18 @@ func initConfig() {
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(configFilename)
 		cfgFile = path.Join(configDir, configFilename)
+		viper.SetConfigFile(cfgFile)
 	}
 
 	viper.SetEnvPrefix("securae")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(`-`, `_`))
 	viper.AutomaticEnv()
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatal(err)
+
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(*fs.PathError); ok {
+			// We can ignore, it will be written by `init` command.
+		} else {
+			log.Fatal(err)
+		}
 	}
 }
