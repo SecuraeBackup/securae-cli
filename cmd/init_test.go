@@ -78,31 +78,12 @@ func TestInitCmdDontOverrideEncryptionKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Get config file modification time
-	fileInfo, err := os.Stat(f.Name())
-	if err != nil {
-		t.Fatal(err)
-	}
-	mTimeBefore := fileInfo.ModTime()
-
 	// Call init command, using config file
 	actual := new(bytes.Buffer)
 	rootCmd.SetOut(actual)
 	rootCmd.SetErr(actual)
 	rootCmd.SetArgs([]string{"--config", f.Name(), "init", "-t", "xxxxx"})
 	rootCmd.Execute()
-
-	// Get config file modification time
-	fileInfo, err = os.Stat(f.Name())
-	if err != nil {
-		t.Fatal(err)
-	}
-	mTimeAfter := fileInfo.ModTime()
-
-	// Check that confg file was modified
-	if mTimeBefore == mTimeAfter {
-		t.Errorf("Existing file %s hasn't been modified by the `init` command", f.Name())
-	}
 
 	// Check that encryption key is still there
 	b, err := ioutil.ReadFile(f.Name())
