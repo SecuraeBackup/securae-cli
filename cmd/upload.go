@@ -56,22 +56,19 @@ Or you can also use an environment variable:
 		}
 		defer file.Close()
 
-		client := &http.Client{
-			Timeout: 3000 * time.Millisecond,
-		}
 		url := fmt.Sprintf("%s/backups/%s/preupload/", apiURL, backupId)
 		filenameOnly := filepath.Base(filename)
-		presignedURL, err := fetchPresignedURL(client, url, apiToken, []byte(fmt.Sprintf(`{"filename": "%s"}`, filenameOnly)))
+		presignedURL, err := fetchPresignedURL(url, apiToken, []byte(fmt.Sprintf(`{"filename": "%s"}`, filenameOnly)))
 		if err != nil {
 			return err
 		}
 
 		cmd.Printf("Uploading file %s... ", filename)
-		err = uploadFile(client, presignedURL, file)
+		err = uploadFile(presignedURL, file)
 		if err == nil {
 			cmd.Printf("OK\n")
 		} else {
-			return err
+			panic(err)
 		}
 		return nil
 
@@ -84,7 +81,13 @@ func init() {
 	viper.BindPFlag("backup-id", uploadCmd.Flags().Lookup("backup-id"))
 }
 
-func fetchPresignedURL(client *http.Client, url string, token string, data []byte) (string, error) {
+func fetchPresignedURL(url string, token string, data []byte) (string, error) {
+	tr := &http.Transport{
+		TLSHandshakeTimeout:   2 * time.Second,
+		IdleConnTimeout:       2 * time.Second,
+		ResponseHeaderTimeout: 2 * time.Second,
+	}
+	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		return "", err
@@ -113,12 +116,18 @@ func fetchPresignedURL(client *http.Client, url string, token string, data []byt
 	return objmap["url"].(string), nil
 }
 
-func uploadFile(client *http.Client, url string, file *os.File) error {
+func uploadFile(url string, file *os.File) error {
 	buffer := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buffer, file); err != nil {
 		return err
 	}
 
+	tr := &http.Transport{
+		TLSHandshakeTimeout:   2 * time.Second,
+		IdleConnTimeout:       2 * time.Second,
+		ResponseHeaderTimeout: 2 * time.Second,
+	}
+	client := &http.Client{Transport: tr}
 	request, err := http.NewRequest(http.MethodPut, url, buffer)
 	if err != nil {
 		return err
