@@ -51,7 +51,6 @@ Or you can also use an environment variable:
 func init() {
 	rootCmd.AddCommand(listCmd)
 	listCmd.Flags().StringP("backup-id", "b", "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
-	viper.BindPFlag("backup-id", uploadCmd.Flags().Lookup("backup-id"))
 }
 
 func fetchFiles(url string, token string, data []byte) ([]string, error) {
