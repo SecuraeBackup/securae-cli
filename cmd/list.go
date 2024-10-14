@@ -4,16 +4,26 @@ Copyright © 2024 Securae Backup
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+type Backup struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Locations []struct {
+		Provider    string `json:"provider"`
+		Region      string `json:"region"`
+		CountryCode string `json:"country_code"`
+		City        string `json:"city"`
+	} `json:"locations"`
+	Backupobjects []string `json:"backupobjects"`
+}
 
 var listCmd = &cobra.Command{
 	Use:   "list [flags]",
@@ -37,8 +47,8 @@ Or you can also use an environment variable:
 		if backupId == "" {
 			fmt.Errorf("A Backup ID must be specified.")
 		}
-		url := fmt.Sprintf("%s/backup_objects", api)
-		files, err := fetchFiles(url, token, []byte(`[]`))
+		url := fmt.Sprintf("%s/backups/%s", api, backupId)
+		files, err := fetchFiles(url, token)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -53,14 +63,14 @@ func init() {
 	listCmd.Flags().StringP("backup-id", "b", "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
 }
 
-func fetchFiles(url string, token string, data []byte) ([]string, error) {
+func fetchFiles(url string, token string) ([]string, error) {
 	tr := &http.Transport{
 		TLSHandshakeTimeout:   2 * time.Second,
 		IdleConnTimeout:       2 * time.Second,
 		ResponseHeaderTimeout: 2 * time.Second,
 	}
 	client := &http.Client{Transport: tr}
-	req, err := http.NewRequest("GET", url, bytes.NewBuffer(data))
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return []string{}, err
 	}
@@ -77,18 +87,14 @@ func fetchFiles(url string, token string, data []byte) ([]string, error) {
 		return []string{}, fmt.Errorf("Error fetching files: %s", resp.Status)
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	var backup = Backup{}
+	err = json.NewDecoder(resp.Body).Decode(&backup)
 	if err != nil {
 		return []string{}, err
 	}
-	var objmap []map[string]interface{}
-	if err := json.Unmarshal(body, &objmap); err != nil {
-		return []string{}, err
-	}
-	//return objmap[0]["name"].(string), nil
 	files := []string{}
-	for _, m := range objmap {
-		files = append(files, m["name"].(string))
+	for _, m := range backup.Backupobjects {
+		files = append(files, m)
 	}
 	return files, nil
 }
