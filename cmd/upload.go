@@ -5,6 +5,8 @@ package cmd
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -49,6 +51,11 @@ Or you can also use an environment variable:
 			return fmt.Errorf("A Backup ID must be specified.")
 		}
 
+		encryptionKeyB64Encoded := viper.GetString("encryption-key-b64encoded")
+		if encryptionKeyB64Encoded == "" {
+			return fmt.Errorf("An encryption key is mandatory.")
+		}
+
 		filename := args[0]
 		file, err := os.Open(filename)
 		if err != nil {
@@ -64,7 +71,7 @@ Or you can also use an environment variable:
 		}
 
 		cmd.Printf("Uploading file %s... ", filename)
-		err = uploadFile(presignedURL, file)
+		err = uploadFile(presignedURL, encryptionKeyB64Encoded, file)
 		if err == nil {
 			cmd.Printf("OK\n")
 		} else {
@@ -82,9 +89,9 @@ func init() {
 
 func fetchPresignedURL(url string, token string, data []byte) (string, error) {
 	tr := &http.Transport{
-		TLSHandshakeTimeout:   2 * time.Second,
-		IdleConnTimeout:       2 * time.Second,
-		ResponseHeaderTimeout: 2 * time.Second,
+		TLSHandshakeTimeout:   5 * time.Second,
+		IdleConnTimeout:       5 * time.Second,
+		ResponseHeaderTimeout: 5 * time.Second,
 	}
 	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
@@ -115,23 +122,29 @@ func fetchPresignedURL(url string, token string, data []byte) (string, error) {
 	return objmap["url"].(string), nil
 }
 
-func uploadFile(url string, file *os.File) error {
+func uploadFile(url string, encryptionKeyB64Encoded string, file *os.File) error {
 	buffer := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buffer, file); err != nil {
 		return err
 	}
 
 	tr := &http.Transport{
-		TLSHandshakeTimeout:   2 * time.Second,
-		IdleConnTimeout:       2 * time.Second,
-		ResponseHeaderTimeout: 2 * time.Second,
+		TLSHandshakeTimeout:   5 * time.Second,
+		IdleConnTimeout:       5 * time.Second,
+		ResponseHeaderTimeout: 5 * time.Second,
 	}
 	client := &http.Client{Transport: tr}
 	request, err := http.NewRequest(http.MethodPut, url, buffer)
 	if err != nil {
 		return err
 	}
+
 	request.Header.Set("Content-Type", "multipart/form-data")
+
+	encryptionKeyMD5, _ := hashEncryptionKey(encryptionKeyB64Encoded)
+	request.Header.Set("X-Amz-Server-Side-Encryption-Customer-Algorithm", "AES256")
+	request.Header.Set("X-Amz-Server-Side-Encryption-Customer-Key", encryptionKeyB64Encoded)
+	request.Header.Set("X-Amz-Server-Side-Encryption-Customer-Key-MD5", encryptionKeyMD5)
 
 	resp, err := client.Do(request)
 	if err != nil {
@@ -144,4 +157,17 @@ func uploadFile(url string, file *os.File) error {
 	}
 
 	return nil
+}
+
+func hashEncryptionKey(encryptionKeyB64Encoded string) (string, error) {
+	encryptionKey, err := base64.StdEncoding.DecodeString(encryptionKeyB64Encoded)
+	if err != nil {
+		return "", fmt.Errorf("error decoding base64 key: %v", err)
+	}
+
+	hash := md5.Sum(encryptionKey)
+	hashBase64 := base64.StdEncoding.EncodeToString(hash[:])
+
+	return hashBase64, nil
+
 }
