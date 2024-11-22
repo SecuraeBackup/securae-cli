@@ -65,7 +65,8 @@ Or you can also use an environment variable:
 
 		url := fmt.Sprintf("%s/backups/%s/preupload/", apiURL, backupId)
 		filenameOnly := filepath.Base(filename)
-		presignedURL, err := fetchPresignedURL(url, apiToken, []byte(fmt.Sprintf(`{"filename": "%s"}`, filenameOnly)))
+		fi, _ := file.Stat()
+		presignedURL, err := fetchPresignedURL(url, apiToken, []byte(fmt.Sprintf(`{"filename": "%s", "size": %d}`, filenameOnly, fi.Size())))
 		if err != nil {
 			return err
 		}
