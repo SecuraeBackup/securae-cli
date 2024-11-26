@@ -6,7 +6,8 @@ package cmd
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"log"
+	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -18,7 +19,7 @@ var initCmd = &cobra.Command{
 	Use:   "init [flags]",
 	Short: "Initialize Securae's configuration",
 	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 
 		client := &http.Client{
 			Timeout: 1000 * time.Millisecond,
@@ -28,27 +29,26 @@ var initCmd = &cobra.Command{
 		token := viper.GetString("api.token")
 		req, err := http.NewRequest("GET", api+"/users/me", nil)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		req.Header.Set("Authorization", "Token "+token)
 
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Println("Network connexion error.")
-			log.Fatal(err)
+			return errors.Join(err, fmt.Errorf("Please verify that %s is reachable from this device.", apiEndpoint))
 		} else {
 			defer resp.Body.Close()
 
 			if resp.StatusCode != 200 {
 				if resp.StatusCode == 401 {
-					cmd.Println("Error: This API token seems to be wrong.")
+					return errors.New("This API token seems to be wrong.")
 				} else {
-					cmd.Println("Error: The API service is unavaliable or its URL has changed.")
+					return errors.New("The API service is unavailable or its URL has changed.")
 				}
 			} else {
 				viper.WriteConfig()
 				if err != nil {
-					panic(err)
+					return err
 				}
 			}
 
@@ -56,13 +56,13 @@ var initCmd = &cobra.Command{
 				key := make([]byte, 32)
 				_, err := rand.Read(key)
 				if err != nil {
-					panic(err)
+					return err
 				}
 				keyEncoded := base64.StdEncoding.EncodeToString(key)
 				viper.Set("encryption-key-b64encoded", keyEncoded)
 				viper.WriteConfig()
 				if err != nil {
-					panic(err)
+					return err
 				}
 
 				cmd.Println("A new encryption key was generated:")
@@ -70,6 +70,7 @@ var initCmd = &cobra.Command{
 				cmd.Println("WARNING: Please save this encryption key in a safe place. You will need it to test your backups or to recover your files in case of disaster.")
 			}
 		}
+		return nil
 
 	},
 }

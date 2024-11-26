@@ -15,20 +15,19 @@ import (
 )
 
 const version = "0.1.3"
+const apiEndpoint = "https://dashboard.securaebackup.com/api/v1"
 
 var cfgFile string
-
-var apiEndpoint = "http://localhost:8000/api/v1"
 
 var rootCmd = &cobra.Command{
 	Use:     "securae",
 	Version: version,
 	Short:   "Securae Backup CLI",
+	SilenceUsage: true,
 }
 
 func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
@@ -41,7 +40,7 @@ func init() {
 func initConfig() {
 	var configFilename = "securae.yaml"
 
-	viper.SetDefault("api.url", "https://dashboard.securaebackup.com/api/v1")
+	viper.SetDefault("api.url", apiEndpoint)
 
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
