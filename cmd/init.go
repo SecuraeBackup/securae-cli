@@ -41,9 +41,9 @@ var initCmd = &cobra.Command{
 
 			if resp.StatusCode != 200 {
 				if resp.StatusCode == 401 {
-					return errors.New("This API token seems to be wrong.")
+					return fmt.Errorf("There was an authentication issue, please check the API token in the configuration.")
 				} else {
-					return errors.New("The API service is unavailable or its URL has changed.")
+					return fmt.Errorf("The API service is unavailable. Please, try again in a few minutes.")
 				}
 			} else {
 				viper.WriteConfig()
