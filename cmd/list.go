@@ -16,13 +16,23 @@ import (
 type Backup struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
+	Size      int    `json:"size"`
 	Locations []struct {
-		Provider    string `json:"provider"`
 		Region      string `json:"region"`
 		CountryCode string `json:"country_code"`
 		City        string `json:"city"`
 	} `json:"locations"`
-	Backupobjects []string `json:"backupobjects"`
+	Backupobjects []struct {
+		Id     string `json:"id"`
+		Name   string `json:"name"`
+		Bucket struct {
+			Region      string `json:"region"`
+			CountryCode string `json:"country_code"`
+			City        string `json:"city"`
+		} `json:"bucket"`
+		Size      int    `json:"size"`
+		CreatedAt string `json:"created_at"`
+	} `json:"backupobjects"`
 }
 
 var listCmd = &cobra.Command{
@@ -97,7 +107,7 @@ func fetchFiles(url string, token string) ([]string, error) {
 	}
 	files := []string{}
 	for _, m := range backup.Backupobjects {
-		files = append(files, m)
+		files = append(files, m.Name)
 	}
 	return files, nil
 }
