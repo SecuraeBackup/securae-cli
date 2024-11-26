@@ -20,9 +20,9 @@ const apiEndpoint = "https://dashboard.securaebackup.com/api/v1"
 var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:     "securae",
-	Version: version,
-	Short:   "Securae Backup CLI",
+	Use:          "securae",
+	Version:      version,
+	Short:        "Securae Backup CLI",
 	SilenceUsage: true,
 }
 

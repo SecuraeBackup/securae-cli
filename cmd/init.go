@@ -9,10 +9,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 var initCmd = &cobra.Command{
@@ -47,9 +49,6 @@ var initCmd = &cobra.Command{
 				}
 			} else {
 				viper.WriteConfig()
-				if err != nil {
-					return err
-				}
 			}
 
 			if viper.GetString("encryption-key-b64encoded") == "" {
@@ -61,13 +60,17 @@ var initCmd = &cobra.Command{
 				keyEncoded := base64.StdEncoding.EncodeToString(key)
 				viper.Set("encryption-key-b64encoded", keyEncoded)
 				viper.WriteConfig()
-				if err != nil {
-					return err
-				}
 
 				cmd.Println("A new encryption key was generated:")
 				cmd.Println("\n" + keyEncoded + "\n")
 				cmd.Println("WARNING: Please save this encryption key in a safe place. You will need it to test your backups or to recover your files in case of disaster.")
+			}
+
+			// Because using `AutomaticEnv()` the env var `SECURAE_BACKUP_ID` is
+			// saved to the config file but it's not needed so it must be removed.
+			configFileName := viper.ConfigFileUsed()
+			if err := removeYAMLKey(configFileName, "backup-id"); err != nil {
+				return err
 			}
 		}
 		return nil
@@ -79,4 +82,31 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 	initCmd.Flags().StringP("api-token", "t", "", "Your API token")
 	viper.BindPFlag("api.token", initCmd.Flags().Lookup("api-token"))
+}
+
+func removeYAMLKey(filename string, key string) error {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return fmt.Errorf("error reading file: %w", err)
+	}
+
+	var yamlContent map[string]interface{}
+	if err := yaml.Unmarshal(data, &yamlContent); err != nil {
+		return fmt.Errorf("error parsing YAML: %w", err)
+	}
+
+	if _, exists := yamlContent[key]; exists {
+		delete(yamlContent, key)
+	} else {
+		return nil
+	}
+	updatedData, err := yaml.Marshal(yamlContent)
+	if err != nil {
+		return fmt.Errorf("error encoding updated YAML: %w", err)
+	}
+
+	if err := os.WriteFile(filename, updatedData, 0644); err != nil {
+		return fmt.Errorf("error writing updated file: %w", err)
+	}
+	return nil
 }
