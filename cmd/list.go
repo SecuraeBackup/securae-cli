@@ -40,6 +40,9 @@ Or you can also use an environment variable:
 
 `,
 	Args: cobra.NoArgs,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		viper.BindPFlag("backup-id", cmd.Flags().Lookup("backup-id"))
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		api := viper.GetString("api.url")
 		token := viper.GetString("api.token")

@@ -40,6 +40,9 @@ Or you can also use an environment variable:
 		}
 		return nil
 	},
+	PreRun: func(cmd *cobra.Command, args []string) {
+		viper.BindPFlag("backup-id", cmd.Flags().Lookup("backup-id"))
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		apiURL := viper.GetString("api.url")
 		apiToken := viper.GetString("api.token")
@@ -78,7 +81,6 @@ Or you can also use an environment variable:
 func init() {
 	rootCmd.AddCommand(downloadCmd)
 	downloadCmd.Flags().StringP("backup-id", "b", "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
-	viper.BindPFlag("backup-id", downloadCmd.Flags().Lookup("backup-id"))
 }
 
 func fetchPresignedDownloadURL(url string, token string, data []byte) (string, error) {

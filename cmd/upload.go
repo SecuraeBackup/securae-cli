@@ -42,6 +42,9 @@ Or you can also use an environment variable:
 		}
 		return nil
 	},
+	PreRun: func(cmd *cobra.Command, args []string) {
+		viper.BindPFlag("backup-id", cmd.Flags().Lookup("backup-id"))
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		apiURL := viper.GetString("api.url")
 		apiToken := viper.GetString("api.token")
