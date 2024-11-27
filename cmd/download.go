@@ -51,6 +51,9 @@ If there is no filename argument, this command downloads the latest file from th
 		if backupId == "" {
 			return fmt.Errorf("A Backup ID must be specified.")
 		}
+		if !IsUUID(backupId) {
+			return fmt.Errorf("Invalid Backup ID format.")
+		}
 
 		encryptionKeyB64Encoded := viper.GetString("encryption-key-b64encoded")
 		if encryptionKeyB64Encoded == "" {

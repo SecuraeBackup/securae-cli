@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
+	"regexp"
 )
 
 var initCmd = &cobra.Command{
@@ -109,4 +110,12 @@ func removeYAMLKey(filename string, key string) error {
 		return fmt.Errorf("error writing updated file: %w", err)
 	}
 	return nil
+}
+
+func IsUUID(s string) bool {
+	// Regular expression for UUID v4
+	uuidV4Regex := `^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`
+	re := regexp.MustCompile(uuidV4Regex)
+
+	return re.MatchString(s)
 }

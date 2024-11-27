@@ -64,6 +64,9 @@ Or you can also use an environment variable:
 		if backupId == "" {
 			return fmt.Errorf("A Backup ID must be specified.")
 		}
+		if !IsUUID(backupId) {
+			return fmt.Errorf("Invalid Backup ID format.")
+		}
 		url := fmt.Sprintf("%s/backups/%s", api, backupId)
 		data, err := fetchBackupData(url, token)
 		if err != nil {
