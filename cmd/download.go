@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -66,12 +67,12 @@ Or you can also use an environment variable:
 			return err
 		}
 
-		cmd.Printf("downloading file %s... ", filename)
+		cmd.Printf("Downloading file %s... ", filename)
 		err = downloadFile(presignedURL, encryptionKeyB64Encoded, filename)
 		if err == nil {
 			cmd.Printf("OK\n")
 		} else {
-			panic(err)
+			return err
 		}
 		return nil
 
@@ -143,7 +144,14 @@ func downloadFile(url, encryptionKeyB64Encoded, filename string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Error downloading file: %s", resp.Status)
+		body, _ := io.ReadAll(resp.Body)
+		if strings.Contains(string(body), "must provide the correct secret key") {
+			err_msg := "the encryption key used to download the file does not match " +
+				"the one used to upload it.\nPlease, verify the value of " +
+				"`encryption-key-b64encoded` in your configuration file."
+			return fmt.Errorf(err_msg)
+		}
+		return fmt.Errorf("status code: %s", resp.Status)
 	}
 
 	file, err := os.Create(filename)
