@@ -56,19 +56,21 @@ Or you can also use an environment variable:
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("backup-id", cmd.Flags().Lookup("backup-id"))
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		api := viper.GetString("api.url")
 		token := viper.GetString("api.token")
+
 		backupId := viper.GetString("backup-id")
 		if backupId == "" {
-			fmt.Errorf("A Backup ID must be specified.")
+			return fmt.Errorf("A Backup ID must be specified.")
 		}
 		url := fmt.Sprintf("%s/backups/%s", api, backupId)
 		data, err := fetchBackupData(url, token)
 		if err != nil {
-			fmt.Println(err)
+			return err
 		}
 		showBackupData(data)
+		return nil
 	},
 }
 
@@ -118,6 +120,11 @@ func fetchBackupData(url string, token string) (Backup, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusNotFound {
+			parts := strings.Split(url, "/")
+			backup_id := parts[len(parts)-1]
+			return Backup{}, fmt.Errorf("Backup ID %s not found in this account or there are no objects available yet", backup_id)
+		}
 		return Backup{}, fmt.Errorf("Error fetching backup data: %s", resp.Status)
 	}
 
