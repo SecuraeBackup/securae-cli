@@ -84,6 +84,7 @@ func init() {
 
 func showBackupData(backup Backup) {
 	text_bold := color.New(color.Bold, color.FgGreen).SprintFunc()
+	text_wait := color.New(color.Bold, color.FgYellow).SprintFunc()
 	text_uuid := color.New(color.Bold).SprintFunc()
 	text_title := color.New(color.Bold).SprintFunc()
 	fmt.Printf("%s (%s)\n", text_bold(backup.Name), humanize.Bytes(backup.Size))
@@ -97,7 +98,11 @@ func showBackupData(backup Backup) {
 	fmt.Printf("\n%s\n-------\n", text_title("Objects"))
 	for _, bo := range backup.Backupobjects {
 		uploadDate, _ := time.ParseInLocation(time.RFC3339Nano, bo.CreatedAt, time.Local)
-		fmt.Printf("%s (%s)\n", text_bold(bo.Name), humanize.Bytes(bo.Size))
+		if bo.Size > 0 {
+			fmt.Printf("%s (%s)\n", text_bold(bo.Name), humanize.Bytes(bo.Size))
+		} else {
+			fmt.Printf("%s (replicating...)\n", text_wait(bo.Name))
+		}
 		fmt.Printf("└─ Object ID: %s uploaded on %s in %s, %s\n", text_uuid(bo.Id), uploadDate.Format(time.RFC822Z), bo.Bucket.City, strings.ToUpper(bo.Bucket.CountryCode))
 	}
 }
