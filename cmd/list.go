@@ -96,6 +96,9 @@ func showBackupData(backup Backup) {
 	}
 	fmt.Printf("Storage location: %s\n", strings.Join(locations, " / "))
 	fmt.Printf("\n%s\n-------\n", text_title("Objects"))
+	if len(backup.Backupobjects) == 0 {
+		fmt.Printf("%s\n", text_wait("No objects available in this bucket."))
+	}
 	for _, bo := range backup.Backupobjects {
 		uploadDate, _ := time.ParseInLocation(time.RFC3339Nano, bo.CreatedAt, time.Local)
 		if bo.Size > 0 {
@@ -131,7 +134,7 @@ func fetchBackupData(url string, token string) (Backup, error) {
 		if resp.StatusCode == http.StatusNotFound {
 			parts := strings.Split(url, "/")
 			backup_id := parts[len(parts)-1]
-			return Backup{}, fmt.Errorf("Backup ID %s not found in this account or there are no objects available yet", backup_id)
+			return Backup{}, fmt.Errorf("Backup ID %s not found on this account.", backup_id)
 		}
 		return Backup{}, fmt.Errorf("Error fetching backup data: %s", resp.Status)
 	}
