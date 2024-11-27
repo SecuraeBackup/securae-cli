@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,11 +32,9 @@ Or you can also use an environment variable:
   export SECURAE_BACKUP_ID=abcd1234-ab12-ab12-ab12-abcdef123456
   securae download database-dump.tar.gz
 
+If there is no filename argument, this command downloads the latest file from the backup.
 `,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
-			return fmt.Errorf("A filename must be specified.")
-		}
 		if err := cobra.MaximumNArgs(1)(cmd, args); err != nil {
 			return fmt.Errorf("Only one filename must be specified.")
 		}
@@ -58,17 +57,23 @@ Or you can also use an environment variable:
 			return fmt.Errorf("An encryption key is mandatory.")
 		}
 
-		filename := args[0]
+		postData := []byte(fmt.Sprintf(`{}`))
+		if len(args) > 0 {
+			filename := args[0]
+			filenameOnly := filepath.Base(filename)
+			postData = []byte(fmt.Sprintf(`{"filename": "%s"}`, filenameOnly))
+		}
 
-		url := fmt.Sprintf("%s/backups/%s/predownload/", apiURL, backupId)
-		filenameOnly := filepath.Base(filename)
-		presignedURL, err := fetchPresignedDownloadURL(url, apiToken, []byte(fmt.Sprintf(`{"filename": "%s"}`, filenameOnly)))
+		preDownloadURL := fmt.Sprintf("%s/backups/%s/predownload/", apiURL, backupId)
+		presignedURL, err := fetchPresignedDownloadURL(preDownloadURL, apiToken, postData)
 		if err != nil {
 			return err
 		}
 
-		cmd.Printf("Downloading file %s... ", filename)
-		err = downloadFile(presignedURL, encryptionKeyB64Encoded, filename)
+		parsedURL, _ := url.Parse(presignedURL)
+		fileToDownload := filepath.Base(parsedURL.Path)
+		cmd.Printf("Downloading file %s... ", fileToDownload)
+		err = downloadFile(presignedURL, encryptionKeyB64Encoded, fileToDownload)
 		if err == nil {
 			cmd.Printf("OK\n")
 		} else {
