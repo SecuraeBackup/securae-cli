@@ -7,16 +7,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 type Backup struct {
-	ID        string `json:"id"`
+	Id        string `json:"id"`
 	Name      string `json:"name"`
-	Size      int    `json:"size"`
+	Size      uint64 `json:"size"`
 	Locations []struct {
 		Region      string `json:"region"`
 		CountryCode string `json:"country_code"`
@@ -30,7 +33,7 @@ type Backup struct {
 			CountryCode string `json:"country_code"`
 			City        string `json:"city"`
 		} `json:"bucket"`
-		Size      int    `json:"size"`
+		Size      uint64 `json:"size"`
 		CreatedAt string `json:"created_at"`
 	} `json:"backupobjects"`
 }
@@ -61,13 +64,11 @@ Or you can also use an environment variable:
 			fmt.Errorf("A Backup ID must be specified.")
 		}
 		url := fmt.Sprintf("%s/backups/%s", api, backupId)
-		files, err := fetchFiles(url, token)
+		data, err := fetchBackupData(url, token)
 		if err != nil {
 			fmt.Println(err)
 		}
-		for _, f := range files {
-			cmd.Println(f)
-		}
+		showBackupData(data)
 	},
 }
 
@@ -76,7 +77,27 @@ func init() {
 	listCmd.Flags().StringP("backup-id", "b", "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
 }
 
-func fetchFiles(url string, token string) ([]string, error) {
+func showBackupData(backup Backup) {
+	text_bold := color.New(color.Bold, color.FgGreen).SprintFunc()
+	text_uuid := color.New(color.Bold).SprintFunc()
+	text_title := color.New(color.Bold).SprintFunc()
+	fmt.Printf("%s (%s)\n", text_bold(backup.Name), humanize.Bytes(backup.Size))
+	fmt.Printf("Backup ID: %s\n", text_uuid(backup.Id))
+	var locations []string
+	for _, bucket := range backup.Locations {
+		location := fmt.Sprintf("%s, %s", bucket.City, strings.ToUpper(bucket.CountryCode))
+		locations = append(locations, location)
+	}
+	fmt.Printf("Storage location: %s\n", strings.Join(locations, " / "))
+	fmt.Printf("\n%s\n-------\n", text_title("Objects"))
+	for _, bo := range backup.Backupobjects {
+		uploadDate, _ := time.ParseInLocation(time.RFC3339Nano, bo.CreatedAt, time.Local)
+		fmt.Printf("%s (%s)\n", text_bold(bo.Name), humanize.Bytes(bo.Size))
+		fmt.Printf("└─ Object ID: %s uploaded on %s in %s, %s\n", text_uuid(bo.Id), uploadDate.Format(time.RFC822Z), bo.Bucket.City, strings.ToUpper(bo.Bucket.CountryCode))
+	}
+}
+
+func fetchBackupData(url string, token string) (Backup, error) {
 	tr := &http.Transport{
 		TLSHandshakeTimeout:   2 * time.Second,
 		IdleConnTimeout:       2 * time.Second,
@@ -85,29 +106,25 @@ func fetchFiles(url string, token string) ([]string, error) {
 	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return []string{}, err
+		return Backup{}, err
 	}
 	req.Header.Set("Authorization", "Token "+token)
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return []string{}, err
+		return Backup{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return []string{}, fmt.Errorf("Error fetching files: %s", resp.Status)
+		return Backup{}, fmt.Errorf("Error fetching backup data: %s", resp.Status)
 	}
 
 	var backup = Backup{}
 	err = json.NewDecoder(resp.Body).Decode(&backup)
 	if err != nil {
-		return []string{}, err
+		return Backup{}, err
 	}
-	files := []string{}
-	for _, m := range backup.Backupobjects {
-		files = append(files, m.Name)
-	}
-	return files, nil
+	return backup, nil
 }
