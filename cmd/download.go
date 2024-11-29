@@ -4,8 +4,6 @@ Copyright © 2024 Securae Backup
 package cmd
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -47,17 +45,14 @@ If there is no filename argument, this command downloads the latest file from th
 		apiURL := viper.GetString("api.url")
 		apiToken := viper.GetString("api.token")
 
-		backupId := viper.GetString(flagBackupId)
-		if backupId == "" {
-			return fmt.Errorf("A Backup ID must be specified.")
-		}
-		if !IsUUID(backupId) {
-			return fmt.Errorf("Invalid Backup ID format.")
+		backupId, err := getBackupId()
+		if err != nil {
+			return err
 		}
 
-		encryptionKeyB64Encoded := viper.GetString("encryption-key-b64encoded")
-		if encryptionKeyB64Encoded == "" {
-			return fmt.Errorf("An encryption key is mandatory.")
+		encryptionKeyB64Encoded, err := getEncryptionKey()
+		if err != nil {
+			return err
 		}
 
 		postData := []byte(fmt.Sprintf(`{}`))
@@ -68,7 +63,7 @@ If there is no filename argument, this command downloads the latest file from th
 		}
 
 		preDownloadURL := fmt.Sprintf("%s/backups/%s/predownload/", apiURL, backupId)
-		presignedURL, err := fetchPresignedDownloadURL(preDownloadURL, apiToken, postData)
+		presignedURL, err := fetchPresignedURL(preDownloadURL, apiToken, postData)
 		if err != nil {
 			return err
 		}
@@ -90,41 +85,6 @@ If there is no filename argument, this command downloads the latest file from th
 func init() {
 	rootCmd.AddCommand(downloadCmd)
 	downloadCmd.Flags().StringP(flagBackupId, flagShortBackupId, "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
-}
-
-func fetchPresignedDownloadURL(url string, token string, data []byte) (string, error) {
-	tr := &http.Transport{
-		TLSHandshakeTimeout:   2 * time.Second,
-		IdleConnTimeout:       2 * time.Second,
-		ResponseHeaderTimeout: 2 * time.Second,
-	}
-	client := &http.Client{Transport: tr}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Authorization", "Token "+token)
-	req.Header.Add("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("Error fetching presigned URL: %s", resp.Status)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	var objmap map[string]interface{}
-	if err := json.Unmarshal(body, &objmap); err != nil {
-		return "", err
-	}
-	return objmap["url"].(string), nil
 }
 
 func downloadFile(url, encryptionKeyB64Encoded, filename string) error {

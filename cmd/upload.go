@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -49,17 +48,14 @@ Or you can also use an environment variable:
 		apiURL := viper.GetString("api.url")
 		apiToken := viper.GetString("api.token")
 
-		backupId := viper.GetString(flagBackupId)
-		if backupId == "" {
-			return fmt.Errorf("A Backup ID must be specified.")
-		}
-		if !IsUUID(backupId) {
-			return fmt.Errorf("Invalid Backup ID format.")
+		backupId, err := getBackupId()
+		if err != nil {
+			return err
 		}
 
-		encryptionKeyB64Encoded := viper.GetString("encryption-key-b64encoded")
-		if encryptionKeyB64Encoded == "" {
-			return fmt.Errorf("An encryption key is mandatory.")
+		encryptionKeyB64Encoded, err := getEncryptionKey()
+		if err != nil {
+			return err
 		}
 
 		filename := args[0]
@@ -92,41 +88,6 @@ Or you can also use an environment variable:
 func init() {
 	rootCmd.AddCommand(uploadCmd)
 	uploadCmd.Flags().StringP(flagBackupId, flagShortBackupId, "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
-}
-
-func fetchPresignedURL(url string, token string, data []byte) (string, error) {
-	tr := &http.Transport{
-		TLSHandshakeTimeout:   5 * time.Second,
-		IdleConnTimeout:       5 * time.Second,
-		ResponseHeaderTimeout: 5 * time.Second,
-	}
-	client := &http.Client{Transport: tr}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Authorization", "Token "+token)
-	req.Header.Add("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("Error fetching presigned URL: %s", resp.Status)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	var objmap map[string]interface{}
-	if err := json.Unmarshal(body, &objmap); err != nil {
-		return "", err
-	}
-	return objmap["url"].(string), nil
 }
 
 func uploadFile(url string, encryptionKeyB64Encoded string, file *os.File) error {

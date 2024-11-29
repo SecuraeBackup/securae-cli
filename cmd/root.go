@@ -4,11 +4,17 @@ Copyright © 2024 Securae Backup
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
 	"io/fs"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -71,4 +77,58 @@ func initConfig() {
 			log.Fatal(err)
 		}
 	}
+}
+
+func getBackupId() (string, error) {
+	backupId := viper.GetString(flagBackupId)
+	if backupId == "" {
+		return "", fmt.Errorf("A Backup ID must be specified.")
+	}
+	if !IsUUID(backupId) {
+		return "", fmt.Errorf("Invalid Backup ID format.")
+	}
+	return backupId, nil
+}
+
+func getEncryptionKey() (string, error) {
+	encryptionKeyB64Encoded := viper.GetString("encryption-key-b64encoded")
+	if encryptionKeyB64Encoded == "" {
+		return "", fmt.Errorf("An encryption key is mandatory.")
+	}
+	return encryptionKeyB64Encoded, nil
+}
+
+func fetchPresignedURL(url string, token string, data []byte) (string, error) {
+	tr := &http.Transport{
+		TLSHandshakeTimeout:   5 * time.Second,
+		IdleConnTimeout:       5 * time.Second,
+		ResponseHeaderTimeout: 5 * time.Second,
+	}
+	client := &http.Client{Transport: tr}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Authorization", "Token "+token)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return "", fmt.Errorf("Error fetching presigned URL: %s", resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	var objmap map[string]interface{}
+	if err := json.Unmarshal(body, &objmap); err != nil {
+		return "", err
+	}
+	return objmap["url"].(string), nil
 }
