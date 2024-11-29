@@ -54,13 +54,13 @@ Or you can also use an environment variable:
 `,
 	Args: cobra.NoArgs,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		viper.BindPFlag("backup-id", cmd.Flags().Lookup("backup-id"))
+		viper.BindPFlag(flagBackupId, cmd.Flags().Lookup(flagBackupId))
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		api := viper.GetString("api.url")
 		token := viper.GetString("api.token")
 
-		backupId := viper.GetString("backup-id")
+		backupId := viper.GetString(flagBackupId)
 		if backupId == "" {
 			return fmt.Errorf("A Backup ID must be specified.")
 		}
@@ -79,7 +79,7 @@ Or you can also use an environment variable:
 
 func init() {
 	rootCmd.AddCommand(listCmd)
-	listCmd.Flags().StringP("backup-id", "b", "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
+	listCmd.Flags().StringP(flagBackupId, flagShortBackupId, "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
 }
 
 func showBackupData(backup Backup) {

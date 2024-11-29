@@ -70,7 +70,7 @@ var initCmd = &cobra.Command{
 			// Because using `AutomaticEnv()` the env var `SECURAE_BACKUP_ID` is
 			// saved to the config file but it's not needed so it must be removed.
 			configFileName := viper.ConfigFileUsed()
-			if err := removeYAMLKey(configFileName, "backup-id"); err != nil {
+			if err := removeYAMLKey(configFileName, flagBackupId); err != nil {
 				return err
 			}
 		}
@@ -81,8 +81,8 @@ var initCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(initCmd)
-	initCmd.Flags().StringP("api-token", "t", "", "Your API token")
-	viper.BindPFlag("api.token", initCmd.Flags().Lookup("api-token"))
+	initCmd.Flags().StringP(flagApiToken, flagShortApiToken, "", "Your API token")
+	viper.BindPFlag("api.token", initCmd.Flags().Lookup(flagApiToken))
 }
 
 func removeYAMLKey(filename string, key string) error {

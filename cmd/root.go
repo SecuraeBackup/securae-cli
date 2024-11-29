@@ -17,6 +17,11 @@ import (
 const version = "0.1.6"
 const apiEndpoint = "https://dashboard.securaebackup.com/api/v1"
 
+const flagApiToken = "api-token"
+const flagShortApiToken = "t"
+const flagBackupId = "backup-id"
+const flagShortBackupId = "b"
+
 var cfgFile string
 
 var rootCmd = &cobra.Command{
