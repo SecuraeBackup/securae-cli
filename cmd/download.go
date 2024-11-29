@@ -154,10 +154,10 @@ func downloadFile(url, encryptionKeyB64Encoded, filename string) error {
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		if strings.Contains(string(body), "must provide the correct secret key") {
-			err_msg := "the encryption key used to download the file does not match " +
+			msg := "the encryption key used to download the file does not match " +
 				"the one used to upload it.\nPlease, verify the value of " +
 				"`encryption-key-b64encoded` in your configuration file."
-			return fmt.Errorf(err_msg)
+			return fmt.Errorf(msg)
 		}
 		return fmt.Errorf("status code: %s", resp.Status)
 	}

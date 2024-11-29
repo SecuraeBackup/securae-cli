@@ -83,30 +83,30 @@ func init() {
 }
 
 func showBackupData(backup Backup) {
-	text_bold := color.New(color.Bold, color.FgGreen).SprintFunc()
-	text_wait := color.New(color.Bold, color.FgYellow).SprintFunc()
-	text_uuid := color.New(color.Bold).SprintFunc()
-	text_title := color.New(color.Bold).SprintFunc()
-	fmt.Printf("%s (%s)\n", text_bold(backup.Name), humanize.Bytes(backup.Size))
-	fmt.Printf("Backup ID: %s\n", text_uuid(backup.Id))
+	textBold := color.New(color.Bold, color.FgGreen).SprintFunc()
+	textWait := color.New(color.Bold, color.FgYellow).SprintFunc()
+	textUUID := color.New(color.Bold).SprintFunc()
+	textTitle := color.New(color.Bold).SprintFunc()
+	fmt.Printf("%s (%s)\n", textBold(backup.Name), humanize.Bytes(backup.Size))
+	fmt.Printf("Backup ID: %s\n", textUUID(backup.Id))
 	var locations []string
 	for _, bucket := range backup.Locations {
 		location := fmt.Sprintf("%s, %s", bucket.City, strings.ToUpper(bucket.CountryCode))
 		locations = append(locations, location)
 	}
 	fmt.Printf("Storage location: %s\n", strings.Join(locations, " / "))
-	fmt.Printf("\n%s\n-------\n", text_title("Objects"))
+	fmt.Printf("\n%s\n-------\n", textTitle("Objects"))
 	if len(backup.Backupobjects) == 0 {
-		fmt.Printf("%s\n", text_wait("No objects available in this bucket."))
+		fmt.Printf("%s\n", textWait("No objects available in this bucket."))
 	}
 	for _, bo := range backup.Backupobjects {
 		uploadDate, _ := time.ParseInLocation(time.RFC3339Nano, bo.CreatedAt, time.Local)
 		if bo.Size > 0 {
-			fmt.Printf("%s (%s)\n", text_bold(bo.Name), humanize.Bytes(bo.Size))
+			fmt.Printf("%s (%s)\n", textBold(bo.Name), humanize.Bytes(bo.Size))
 		} else {
-			fmt.Printf("%s (replicating...)\n", text_wait(bo.Name))
+			fmt.Printf("%s (replicating...)\n", textWait(bo.Name))
 		}
-		fmt.Printf("└─ Object ID: %s uploaded on %s in %s, %s\n", text_uuid(bo.Id), uploadDate.Format(time.RFC822Z), bo.Bucket.City, strings.ToUpper(bo.Bucket.CountryCode))
+		fmt.Printf("└─ Object ID: %s uploaded on %s in %s, %s\n", textUUID(bo.Id), uploadDate.Format(time.RFC822Z), bo.Bucket.City, strings.ToUpper(bo.Bucket.CountryCode))
 	}
 }
 
@@ -133,8 +133,8 @@ func fetchBackupData(url string, token string) (Backup, error) {
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusNotFound {
 			parts := strings.Split(url, "/")
-			backup_id := parts[len(parts)-1]
-			return Backup{}, fmt.Errorf("Backup ID %s not found on this account.", backup_id)
+			backupId := parts[len(parts)-1]
+			return Backup{}, fmt.Errorf("Backup ID %s not found on this account.", backupId)
 		}
 		return Backup{}, fmt.Errorf("Error fetching backup data: %s", resp.Status)
 	}
