@@ -128,6 +128,9 @@ func uploadFile(url string, encryptionKeyB64Encoded string, file *os.File) error
 }
 
 func hashEncryptionKey(encryptionKeyB64Encoded string) (string, error) {
+	if encryptionKeyB64Encoded == "" {
+		return "", fmt.Errorf("There's no encryption key to hash")
+	}
 	encryptionKey, err := base64.StdEncoding.DecodeString(encryptionKeyB64Encoded)
 	if err != nil {
 		return "", fmt.Errorf("error decoding base64 key: %v", err)
