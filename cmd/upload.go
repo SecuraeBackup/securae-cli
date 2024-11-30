@@ -78,7 +78,7 @@ Or you can also use an environment variable:
 		if err == nil {
 			cmd.Printf("OK\n")
 		} else {
-			panic(err)
+			return err
 		}
 		return nil
 
