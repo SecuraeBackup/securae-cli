@@ -118,17 +118,22 @@ func fetchPresignedURL(url string, token string, data []byte) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("Error fetching presigned URL: %s", resp.Status)
-	}
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
+
 	var objmap map[string]interface{}
 	if err := json.Unmarshal(body, &objmap); err != nil {
-		return "", err
+		objmap = make(map[string]interface{})
 	}
+
+	if resp.StatusCode != http.StatusCreated {
+		if resp.StatusCode == http.StatusPaymentRequired {
+			return "", fmt.Errorf(objmap["error"].(string))
+		}
+		return "", fmt.Errorf("Fetching presigned URL: %s", resp.Status)
+	}
+
 	return objmap["url"].(string), nil
 }
