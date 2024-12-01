@@ -10,12 +10,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
-	"regexp"
 )
 
 var initCmd = &cobra.Command{
@@ -42,8 +42,8 @@ var initCmd = &cobra.Command{
 		} else {
 			defer resp.Body.Close()
 
-			if resp.StatusCode != 200 {
-				if resp.StatusCode == 401 {
+			if resp.StatusCode != http.StatusOK {
+				if resp.StatusCode == http.StatusUnauthorized {
 					return fmt.Errorf("There was an authentication issue, please check the API token in the configuration.")
 				} else {
 					return fmt.Errorf("The API service is unavailable. Please, try again in a few minutes.")
