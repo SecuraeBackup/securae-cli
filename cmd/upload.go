@@ -4,11 +4,9 @@ Copyright © 2024 Securae Backup
 package cmd
 
 import (
-	"bytes"
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -91,22 +89,24 @@ func init() {
 }
 
 func uploadFile(url string, encryptionKeyB64Encoded string, file *os.File) error {
-	buffer := bytes.NewBuffer(nil)
-	if _, err := io.Copy(buffer, file); err != nil {
-		return err
-	}
-
 	tr := &http.Transport{
 		TLSHandshakeTimeout:   5 * time.Second,
 		IdleConnTimeout:       5 * time.Second,
 		ResponseHeaderTimeout: 5 * time.Second,
 	}
 	client := &http.Client{Transport: tr}
-	request, err := http.NewRequest(http.MethodPut, url, buffer)
+	request, err := http.NewRequest(http.MethodPut, url, file)
 	if err != nil {
 		return err
 	}
 
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to get file info: %w", err)
+	}
+	fileSize := fileInfo.Size()
+
+	request.ContentLength = fileSize
 	request.Header.Set("Content-Type", "multipart/form-data")
 
 	encryptionKeyMD5, _ := hashEncryptionKey(encryptionKeyB64Encoded)
