@@ -40,9 +40,14 @@ type Backup struct {
 
 var listCmd = &cobra.Command{
 	Use:   "list [flags]",
-	Short: "List files in a backup",
-	Long: `List files into the backup ID (UUID format) defined in the web UI.
-For example:
+	Short: "List backups or files in a backup",
+	Long: `List backups or files into a backup using its ID (UUID format).
+
+For example, list all the backups:
+
+  securae list
+
+Or for files into a backup
 
   securae list --backup-id=abcd1234-ab12-ab12-ab12-abcdef123456
 
@@ -62,17 +67,23 @@ Or you can also use an environment variable:
 
 		backupId := viper.GetString(flagBackupId)
 		if backupId == "" {
-			return fmt.Errorf("A Backup ID must be specified.")
+			url := fmt.Sprintf("%s/backups", api)
+			data, err := fetchBackups(url, token)
+			if err != nil {
+				return err
+			}
+			showBackups(data)
+		} else {
+			if !IsUUID(backupId) {
+				return fmt.Errorf("Invalid Backup ID format.")
+			}
+			url := fmt.Sprintf("%s/backups/%s", api, backupId)
+			data, err := fetchBackupData(url, token)
+			if err != nil {
+				return err
+			}
+			showBackupData(data, true)
 		}
-		if !IsUUID(backupId) {
-			return fmt.Errorf("Invalid Backup ID format.")
-		}
-		url := fmt.Sprintf("%s/backups/%s", api, backupId)
-		data, err := fetchBackupData(url, token)
-		if err != nil {
-			return err
-		}
-		showBackupData(data)
 		return nil
 	},
 }
@@ -82,7 +93,7 @@ func init() {
 	listCmd.Flags().StringP(flagBackupId, flagShortBackupId, "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
 }
 
-func showBackupData(backup Backup) {
+func showBackupData(backup Backup, showMissing bool) {
 	textBold := color.New(color.Bold, color.FgGreen).SprintFunc()
 	textWait := color.New(color.Bold, color.FgYellow).SprintFunc()
 	textUUID := color.New(color.Bold).SprintFunc()
@@ -94,19 +105,33 @@ func showBackupData(backup Backup) {
 		location := fmt.Sprintf("%s, %s", bucket.City, strings.ToUpper(bucket.CountryCode))
 		locations = append(locations, location)
 	}
-	fmt.Printf("Storage location: %s\n", strings.Join(locations, " / "))
-	fmt.Printf("\n%s\n-------\n", textTitle("Objects"))
-	if len(backup.Backupobjects) == 0 {
-		fmt.Printf("%s\n", textWait("No objects available in this bucket."))
+	if len(locations) > 0 {
+		fmt.Printf("Storage location: %s\n", strings.Join(locations, " / "))
 	}
-	for _, bo := range backup.Backupobjects {
-		uploadDate, _ := time.ParseInLocation(time.RFC3339Nano, bo.CreatedAt, time.Local)
-		if bo.Size > 0 {
-			fmt.Printf("%s (%s)\n", textBold(bo.Name), humanize.Bytes(bo.Size))
-		} else {
-			fmt.Printf("%s (replicating...)\n", textWait(bo.Name))
+	if len(backup.Backupobjects) > 0 {
+		fmt.Printf("\n%s\n-------\n", textTitle("Objects"))
+		for _, bo := range backup.Backupobjects {
+			uploadDate, _ := time.ParseInLocation(time.RFC3339Nano, bo.CreatedAt, time.Local)
+			if bo.Size > 0 {
+				fmt.Printf("%s (%s)\n", textBold(bo.Name), humanize.Bytes(bo.Size))
+			} else {
+				fmt.Printf("%s (replicating...)\n", textWait(bo.Name))
+			}
+			fmt.Printf("└─ Object ID: %s uploaded on %s in %s, %s\n", textUUID(bo.Id), uploadDate.Format(time.RFC822Z), bo.Bucket.City, strings.ToUpper(bo.Bucket.CountryCode))
 		}
-		fmt.Printf("└─ Object ID: %s uploaded on %s in %s, %s\n", textUUID(bo.Id), uploadDate.Format(time.RFC822Z), bo.Bucket.City, strings.ToUpper(bo.Bucket.CountryCode))
+	} else {
+		if showMissing {
+			fmt.Printf("\n%s\n-------\n", textTitle("Objects"))
+			fmt.Printf("%s\n", textWait("No objects available in this bucket."))
+		} else {
+			fmt.Printf("\n")
+		}
+	}
+}
+
+func showBackups(backups []Backup) {
+	for _, backup := range backups {
+		showBackupData(backup, false)
 	}
 }
 
@@ -145,4 +170,36 @@ func fetchBackupData(url string, token string) (Backup, error) {
 		return Backup{}, err
 	}
 	return backup, nil
+}
+
+func fetchBackups(url string, token string) ([]Backup, error) {
+	tr := &http.Transport{
+		TLSHandshakeTimeout:   2 * time.Second,
+		IdleConnTimeout:       2 * time.Second,
+		ResponseHeaderTimeout: 2 * time.Second,
+	}
+	client := &http.Client{Transport: tr}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return []Backup{}, err
+	}
+	req.Header.Set("Authorization", "Token "+token)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return []Backup{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return []Backup{}, fmt.Errorf("Error fetching backup data: %s", resp.Status)
+	}
+
+	var backups = []Backup{}
+	err = json.NewDecoder(resp.Body).Decode(&backups)
+	if err != nil {
+		return []Backup{}, err
+	}
+	return backups, nil
 }
