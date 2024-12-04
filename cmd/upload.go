@@ -84,7 +84,7 @@ Or you can also use an environment variable:
 }
 
 func init() {
-	rootCmd.AddCommand(uploadCmd)
+	RootCmd.AddCommand(uploadCmd)
 	uploadCmd.Flags().StringP(flagBackupId, flagShortBackupId, "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
 }
 

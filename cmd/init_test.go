@@ -43,10 +43,10 @@ func TestInitCmdCreateConfigFile(t *testing.T) {
 
 	// Call init command, it should create the config file
 	actual := new(bytes.Buffer)
-	rootCmd.SetOut(actual)
-	rootCmd.SetErr(actual)
-	rootCmd.SetArgs([]string{"--config", configFile, "init", "-t", "xxxxx"})
-	rootCmd.Execute()
+	RootCmd.SetOut(actual)
+	RootCmd.SetErr(actual)
+	RootCmd.SetArgs([]string{"--config", configFile, "init", "-t", "xxxxx"})
+	RootCmd.Execute()
 
 	// Check that confg file exists now
 	_, err = os.Stat(configFile)
@@ -80,10 +80,10 @@ func TestInitCmdDontOverrideEncryptionKey(t *testing.T) {
 
 	// Call init command, using config file
 	actual := new(bytes.Buffer)
-	rootCmd.SetOut(actual)
-	rootCmd.SetErr(actual)
-	rootCmd.SetArgs([]string{"--config", f.Name(), "init", "-t", "xxxxx"})
-	rootCmd.Execute()
+	RootCmd.SetOut(actual)
+	RootCmd.SetErr(actual)
+	RootCmd.SetArgs([]string{"--config", f.Name(), "init", "-t", "xxxxx"})
+	RootCmd.Execute()
 
 	// Check that encryption key is still there
 	b, err := ioutil.ReadFile(f.Name())

@@ -83,7 +83,7 @@ If there is no filename argument, this command downloads the latest file from th
 }
 
 func init() {
-	rootCmd.AddCommand(downloadCmd)
+	RootCmd.AddCommand(downloadCmd)
 	downloadCmd.Flags().StringP(flagBackupId, flagShortBackupId, "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
 }
 

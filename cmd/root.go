@@ -30,22 +30,23 @@ const flagShortBackupId = "b"
 
 var cfgFile string
 
-var rootCmd = &cobra.Command{
-	Use:          "securae",
-	Version:      version,
-	Short:        "Securae Backup CLI",
-	SilenceUsage: true,
+var RootCmd = &cobra.Command{
+	Use:               "securae",
+	Version:           version,
+	Short:             "Securae Backup CLI",
+	SilenceUsage:      true,
+	DisableAutoGenTag: true,
 }
 
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := RootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/securae.yaml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/securae.yaml)")
 }
 
 func initConfig() {

@@ -80,7 +80,7 @@ var initCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(initCmd)
+	RootCmd.AddCommand(initCmd)
 	initCmd.Flags().StringP(flagApiToken, flagShortApiToken, "", "Your API token")
 	viper.BindPFlag("api.token", initCmd.Flags().Lookup(flagApiToken))
 }
