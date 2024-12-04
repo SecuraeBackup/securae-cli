@@ -19,17 +19,13 @@ import (
 var uploadCmd = &cobra.Command{
 	Use:   "upload [filename] [flags]",
 	Short: "Upload backup files",
-	Long: `Upload files into the backup ID (UUID format) defined in the web UI.
-For example:
+	Long:  `Upload files into the backup ID (UUID format) defined in the web UI.`,
+	Example: `# using --backup-id
+securae upload database-dump.tar.gz --backup-id=abcd1234-ab12-ab12-ab12-abcdef123456
 
-  securae upload database-dump.tar.gz --backup-id=abcd1234-ab12-ab12-ab12-abcdef123456
-
-Or you can also use an environment variable:
-
-  export SECURAE_BACKUP_ID=abcd1234-ab12-ab12-ab12-abcdef123456
-  securae upload database-dump.tar.gz
-
-`,
+# upload a file using an environment variable
+export SECURAE_BACKUP_ID=abcd1234-ab12-ab12-ab12-abcdef123456
+securae upload database-dump.tar.gz`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
 			return fmt.Errorf("A filename must be specified.")

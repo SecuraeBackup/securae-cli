@@ -19,9 +19,11 @@ import (
 )
 
 var initCmd = &cobra.Command{
-	Use:   "init [flags]",
-	Short: "Initialize Securae's configuration",
-	Args:  cobra.NoArgs,
+	Use:     "init [flags]",
+	Short:   "Initialize Securae's configuration",
+	Long:    `Validate your API token, generate an encryption key and store all those informations in a configuration file.`,
+	Example: `securae init --api-token xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
+	Args:    cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		client := &http.Client{

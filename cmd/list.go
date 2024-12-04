@@ -41,22 +41,16 @@ type Backup struct {
 var listCmd = &cobra.Command{
 	Use:   "list [flags]",
 	Short: "List backups or files in a backup",
-	Long: `List backups or files into a backup using its ID (UUID format).
+	Long:  `List backups or files into a backup using its ID (UUID format).`,
+	Example: `# list all the backups
+securae list
 
-For example, list all the backups:
+# list files into a backup
+securae list --backup-id=abcd1234-ab12-ab12-ab12-abcdef123456
 
-  securae list
-
-Or for files into a backup
-
-  securae list --backup-id=abcd1234-ab12-ab12-ab12-abcdef123456
-
-Or you can also use an environment variable:
-
-  export SECURAE_BACKUP_ID=abcd1234-ab12-ab12-ab12-abcdef123456
-  securae list
-
-`,
+# list files using an environment variable
+export SECURAE_BACKUP_ID=abcd1234-ab12-ab12-ab12-abcdef123456
+securae list`,
 	Args: cobra.NoArgs,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag(flagBackupId, cmd.Flags().Lookup(flagBackupId))

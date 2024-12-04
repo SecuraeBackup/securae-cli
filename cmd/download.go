@@ -19,19 +19,20 @@ import (
 
 var downloadCmd = &cobra.Command{
 	Use:   "download [filename] [flags]",
-	Short: "download backup files",
-	Long: `download files using a backup ID (UUID format), as defined in the web UI.
-For example:
-
-  securae download database-dump.tar.gz --backup-id=abcd1234-ab12-ab12-ab12-abcdef123456
-
-Or you can also use an environment variable:
-
-  export SECURAE_BACKUP_ID=abcd1234-ab12-ab12-ab12-abcdef123456
-  securae download database-dump.tar.gz
+	Short: "Download backup files",
+	Long: `Download files using a backup ID (UUID format), as defined in the web UI.
 
 If there is no filename argument, this command downloads the latest file from the backup.
 `,
+	Example: `# using --backup-id
+securae download database-dump.tar.gz --backup-id=abcd1234-ab12-ab12-ab12-abcdef123456
+
+# without specifying a filename it downloads the latest uploaded file
+securae download --backup-id=abcd1234-ab12-ab12-ab12-abcdef123456
+
+# download a file using an environment variable
+export SECURAE_BACKUP_ID=abcd1234-ab12-ab12-ab12-abcdef123456
+securae download database-dump.tar.gz`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.MaximumNArgs(1)(cmd, args); err != nil {
 			return fmt.Errorf("Only one filename must be specified.")
