@@ -21,7 +21,7 @@ import (
 var initCmd = &cobra.Command{
 	Use:     "init [flags]",
 	Short:   "Initialize Securae's configuration",
-	Long:    `Validate your API token, generate an encryption key and store all those informations in a configuration file.`,
+	Long:    `Validate your API token, generate an encryption key, and store all this information in a configuration file.`,
 	Example: `securae init --api-token xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
 	Args:    cobra.NoArgs,
 	GroupID: "setup",
