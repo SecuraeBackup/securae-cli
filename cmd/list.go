@@ -51,7 +51,8 @@ securae list --backup-id=abcd1234-ab12-ab12-ab12-abcdef123456
 # list files using an environment variable
 export SECURAE_BACKUP_ID=abcd1234-ab12-ab12-ab12-abcdef123456
 securae list`,
-	Args: cobra.NoArgs,
+	Args:    cobra.NoArgs,
+	GroupID: "backup",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag(flagBackupId, cmd.Flags().Lookup(flagBackupId))
 	},

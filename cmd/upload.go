@@ -35,6 +35,7 @@ securae upload database-dump.tar.gz`,
 		}
 		return nil
 	},
+	GroupID: "backup",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag(flagBackupId, cmd.Flags().Lookup(flagBackupId))
 	},

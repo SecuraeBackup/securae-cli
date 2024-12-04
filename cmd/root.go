@@ -47,6 +47,9 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/securae.yaml)")
+
+	RootCmd.AddGroup(&cobra.Group{ID: "backup", Title: "Backup Commands:"})
+	RootCmd.AddGroup(&cobra.Group{ID: "setup", Title: "Setup Commands:"})
 }
 
 func initConfig() {
