@@ -143,6 +143,7 @@ func fetchBackupData(url string, token string) (Backup, error) {
 	}
 	req.Header.Set("Authorization", "Token "+token)
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -180,6 +181,7 @@ func fetchBackups(url string, token string) ([]Backup, error) {
 	}
 	req.Header.Set("Authorization", "Token "+token)
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {

@@ -22,6 +22,7 @@ import (
 
 const version = "0.1.11"
 const apiEndpoint = "https://dashboard.securaebackup.com/api/v1"
+const userAgent = "SecuraeCLI/" + version
 
 const flagApiToken = "api-token"
 const flagShortApiToken = "t"
@@ -115,6 +116,7 @@ func fetchPresignedURL(url string, token string, data []byte) (string, error) {
 	}
 	req.Header.Set("Authorization", "Token "+token)
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {

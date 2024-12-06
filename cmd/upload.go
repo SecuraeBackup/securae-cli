@@ -110,6 +110,7 @@ func uploadFile(url string, encryptionKeyB64Encoded string, file *os.File) error
 	request.Header.Set("X-Amz-Server-Side-Encryption-Customer-Algorithm", "AES256")
 	request.Header.Set("X-Amz-Server-Side-Encryption-Customer-Key", encryptionKeyB64Encoded)
 	request.Header.Set("X-Amz-Server-Side-Encryption-Customer-Key-MD5", encryptionKeyMD5)
+	request.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(request)
 	if err != nil {

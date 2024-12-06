@@ -106,6 +106,7 @@ func downloadFile(url, encryptionKeyB64Encoded, filename string) error {
 	req.Header.Set("X-Amz-Server-Side-Encryption-Customer-Algorithm", "AES256")
 	req.Header.Set("X-Amz-Server-Side-Encryption-Customer-Key", encryptionKeyB64Encoded)
 	req.Header.Set("X-Amz-Server-Side-Encryption-Customer-Key-MD5", encryptionKeyMD5)
+	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {
