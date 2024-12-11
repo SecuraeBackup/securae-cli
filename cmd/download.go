@@ -91,9 +91,9 @@ func init() {
 
 func downloadFile(url, encryptionKeyB64Encoded, filename string) error {
 	tr := &http.Transport{
-		TLSHandshakeTimeout:   2 * time.Second,
-		IdleConnTimeout:       2 * time.Second,
-		ResponseHeaderTimeout: 2 * time.Second,
+		TLSHandshakeTimeout:   5 * time.Second,
+		IdleConnTimeout:       5 * time.Second,
+		ResponseHeaderTimeout: 5 * time.Second,
 	}
 	client := &http.Client{Transport: tr}
 

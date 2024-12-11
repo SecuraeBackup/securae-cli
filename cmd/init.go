@@ -28,7 +28,7 @@ var initCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		client := &http.Client{
-			Timeout: 1000 * time.Millisecond,
+			Timeout: 5 * time.Second,
 		}
 
 		api := viper.GetString("api.url")

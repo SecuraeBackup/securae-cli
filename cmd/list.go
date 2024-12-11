@@ -132,9 +132,9 @@ func showBackups(backups []Backup) {
 
 func fetchBackupData(url string, token string) (Backup, error) {
 	tr := &http.Transport{
-		TLSHandshakeTimeout:   2 * time.Second,
-		IdleConnTimeout:       2 * time.Second,
-		ResponseHeaderTimeout: 2 * time.Second,
+		TLSHandshakeTimeout:   5 * time.Second,
+		IdleConnTimeout:       5 * time.Second,
+		ResponseHeaderTimeout: 5 * time.Second,
 	}
 	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest("GET", url, nil)
@@ -170,9 +170,9 @@ func fetchBackupData(url string, token string) (Backup, error) {
 
 func fetchBackups(url string, token string) ([]Backup, error) {
 	tr := &http.Transport{
-		TLSHandshakeTimeout:   2 * time.Second,
-		IdleConnTimeout:       2 * time.Second,
-		ResponseHeaderTimeout: 2 * time.Second,
+		TLSHandshakeTimeout:   5 * time.Second,
+		IdleConnTimeout:       5 * time.Second,
+		ResponseHeaderTimeout: 5 * time.Second,
 	}
 	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest("GET", url, nil)
