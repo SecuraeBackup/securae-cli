@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const version = "0.1.12"
+const version = "0.1.13"
 const apiEndpoint = "https://dashboard.securaebackup.com/api/v1"
 const userAgent = "SecuraeCLI/" + version
 
