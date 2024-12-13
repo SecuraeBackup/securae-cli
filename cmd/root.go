@@ -124,6 +124,11 @@ func fetchPresignedURL(url string, token string, data []byte) (string, error) {
 	}
 	defer resp.Body.Close()
 
+	err = CheckCLIVersionHeaders(resp.Header, version)
+	if err != nil {
+		return "", err
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err

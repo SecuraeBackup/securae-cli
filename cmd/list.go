@@ -151,6 +151,11 @@ func fetchBackupData(url string, token string) (Backup, error) {
 	}
 	defer resp.Body.Close()
 
+	err = CheckCLIVersionHeaders(resp.Header, version)
+	if err != nil {
+		return Backup{}, err
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusNotFound {
 			parts := strings.Split(url, "/")
@@ -188,6 +193,11 @@ func fetchBackups(url string, token string) ([]Backup, error) {
 		return []Backup{}, err
 	}
 	defer resp.Body.Close()
+
+	err = CheckCLIVersionHeaders(resp.Header, version)
+	if err != nil {
+		return []Backup{}, err
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		return []Backup{}, fmt.Errorf("Error fetching backup data: %s", resp.Status)

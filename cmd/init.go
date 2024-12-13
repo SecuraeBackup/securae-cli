@@ -46,6 +46,11 @@ var initCmd = &cobra.Command{
 		} else {
 			defer resp.Body.Close()
 
+			err = CheckCLIVersionHeaders(resp.Header, version)
+			if err != nil {
+				return err
+			}
+
 			if resp.StatusCode != http.StatusOK {
 				if resp.StatusCode == http.StatusUnauthorized {
 					return fmt.Errorf("There was an authentication issue, please check the API token in the configuration.")
