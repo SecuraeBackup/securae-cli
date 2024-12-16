@@ -1,12 +1,30 @@
 package cmd
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 
 	"golang.org/x/mod/semver"
 )
+
+func ChecksumSHA256(file *os.File) (string, error) {
+	hasher := sha256.New()
+
+	_, err := io.Copy(hasher, file)
+	if err != nil {
+		return "", fmt.Errorf("failed to calculate checksum: %w", err)
+	}
+
+	checksum := hasher.Sum(nil)
+	base64Checksum := base64.StdEncoding.EncodeToString(checksum)
+
+	return base64Checksum, nil
+}
 
 func CheckCLIVersionHeaders(headers http.Header, ownVersion string) error {
 	var latestVersion, minSupportedVersion string

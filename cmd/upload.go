@@ -63,13 +63,22 @@ securae upload database-dump.tar.gz`,
 		url := fmt.Sprintf("%s/backups/%s/preupload/", apiURL, backupId)
 		filenameOnly := filepath.Base(filename)
 		fi, _ := file.Stat()
-		presignedURL, err := fetchPresignedURL(url, apiToken, []byte(fmt.Sprintf(`{"filename": "%s", "size": %d}`, filenameOnly, fi.Size())))
+
+		cmd.Printf("[%s] Calculating integrity checksum (SHA-256)... ", filenameOnly)
+		checksum, err := ChecksumSHA256(file)
+		if err == nil {
+			cmd.Printf("OK\n")
+		} else {
+			return err
+		}
+
+		presignedURL, err := fetchPresignedURL(url, apiToken, []byte(fmt.Sprintf(`{"filename": "%s", "size": %d, "checksum": "%s"}`, filenameOnly, fi.Size(), checksum)))
 		if err != nil {
 			return err
 		}
 
-		cmd.Printf("Uploading file %s... ", filename)
-		err = uploadFile(presignedURL, encryptionKeyB64Encoded, file)
+		cmd.Printf("[%s] Uploading file... ", filenameOnly)
+		err = uploadFile(presignedURL, encryptionKeyB64Encoded, file, checksum)
 		if err == nil {
 			cmd.Printf("OK\n")
 		} else {
@@ -85,7 +94,12 @@ func init() {
 	uploadCmd.Flags().StringP(flagBackupId, flagShortBackupId, "", "A backup ID (`UUID` format) where your files will be stored. It can also be specified using the environment variable SECURAE_BACKUP_ID.")
 }
 
-func uploadFile(url string, encryptionKeyB64Encoded string, file *os.File) error {
+func uploadFile(url string, encryptionKeyB64Encoded string, file *os.File, checksum string) error {
+	// Reset file position
+	if _, err := file.Seek(0, 0); err != nil {
+		return err
+	}
+
 	tr := &http.Transport{
 		TLSHandshakeTimeout:   5 * time.Second,
 		IdleConnTimeout:       5 * time.Second,
@@ -110,6 +124,7 @@ func uploadFile(url string, encryptionKeyB64Encoded string, file *os.File) error
 	request.Header.Set("X-Amz-Server-Side-Encryption-Customer-Algorithm", "AES256")
 	request.Header.Set("X-Amz-Server-Side-Encryption-Customer-Key", encryptionKeyB64Encoded)
 	request.Header.Set("X-Amz-Server-Side-Encryption-Customer-Key-MD5", encryptionKeyMD5)
+	request.Header.Set("X-Amz-Checksum-SHA256", checksum)
 	request.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(request)
