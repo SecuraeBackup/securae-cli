@@ -57,11 +57,11 @@ securae download database-dump.tar.gz`,
 			return err
 		}
 
-		postData := []byte(fmt.Sprintf(`{}`))
+		postData := []byte(fmt.Sprintf(`{"include_checksum": true}`))
 		if len(args) > 0 {
 			filename := args[0]
 			filenameOnly := filepath.Base(filename)
-			postData = []byte(fmt.Sprintf(`{"filename": "%s"}`, filenameOnly))
+			postData = []byte(fmt.Sprintf(`{"filename": "%s", "include_checksum": true}`, filenameOnly))
 		}
 
 		preDownloadURL := fmt.Sprintf("%s/backups/%s/predownload/", apiURL, backupId)
@@ -106,6 +106,7 @@ func downloadFile(url, encryptionKeyB64Encoded, filename string) error {
 	req.Header.Set("X-Amz-Server-Side-Encryption-Customer-Algorithm", "AES256")
 	req.Header.Set("X-Amz-Server-Side-Encryption-Customer-Key", encryptionKeyB64Encoded)
 	req.Header.Set("X-Amz-Server-Side-Encryption-Customer-Key-MD5", encryptionKeyMD5)
+	req.Header.Set("X-Amz-Checksum-Mode", "ENABLED")
 	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(req)
