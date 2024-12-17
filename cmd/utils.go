@@ -27,21 +27,12 @@ func ChecksumSHA256(file *os.File) (string, error) {
 }
 
 func CheckCLIVersionHeaders(headers http.Header, ownVersion string) error {
-	var latestVersion, minSupportedVersion string
-
-	minSupportedVersionHeaders, ok := headers["X-Securae-Cli-Min-Supported-Version"]
-	if !ok {
+	minSupportedVersion := headers.Get("X-Securae-Cli-Min-Supported-Version")
+	if minSupportedVersion == "" {
 		// Skip check when there's no header
 		return nil
 	}
-	for _, value := range minSupportedVersionHeaders {
-		minSupportedVersion = value
-	}
-
-	latestVersionHeaders, ok := headers["X-Securae-Cli-Latest-Version"]
-	for _, value := range latestVersionHeaders {
-		latestVersion = value
-	}
+	latestVersion := headers.Get("X-Securae-Cli-Latest-Version")
 
 	cmp := semver.Compare("v"+ownVersion, "v"+minSupportedVersion)
 	if cmp < 0 {
