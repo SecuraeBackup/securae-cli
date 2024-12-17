@@ -140,10 +140,14 @@ func fetchPresignedURL(url string, token string, data []byte) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		if resp.StatusCode == http.StatusPaymentRequired {
-			return "", fmt.Errorf(objmap["error"].(string))
+		switch resp.StatusCode {
+		case http.StatusPaymentRequired:
+			return "", fmt.Errorf("%s", objmap["error"])
+		case http.StatusNotFound:
+			return "", fmt.Errorf("The backup could not be found on this account, or it does not contain any files yet.")
+		default:
+			return "", fmt.Errorf("Fetching presigned URL: %s", resp.Status)
 		}
-		return "", fmt.Errorf("Fetching presigned URL: %s", resp.Status)
 	}
 
 	return objmap["url"].(string), nil
