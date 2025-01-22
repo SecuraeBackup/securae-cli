@@ -1,5 +1,5 @@
 /*
-Copyright © 2024 Securae Backup
+Copyright 2024-2025 Securae Backup
 */
 package main
 
